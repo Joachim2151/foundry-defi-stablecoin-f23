@@ -1,5 +1,4 @@
-//  SPDX-Lincense-Identifier: MIT
-
+// SPDX-License-identifier: MIT
 // Layout of Contract:
 // version
 // imports
@@ -23,6 +22,9 @@
 
 pragma solidity ^0.8.18;
 
+import {ERC20Burnable, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
 /*
  * @title Decentralized StableCoin
  * @author Joachim Nyam
@@ -31,10 +33,36 @@ pragma solidity ^0.8.18;
  * Relative Stability: Pegged to USD
  *
  *
- * This us the contract meant to be governed by DSCEnnigine. This contract is just the ERC20 impementation of our stablecoin system.
+ * This contract is meant to be governed by DSCEnnigine. This contract is just the ERC20 impementation of our stablecoin system.
  *
  */
-contract DecentralizedStableCoin {
-    function 
 
+contract DecentralizedStableCoin is ERC20Burnable, Ownable {
+    error DecentralizedStableCoin__MustBeMoreThanZero();
+    error DecentrlizedStableCoin__BurnAmountExceedsBalance();
+    error DecentralizedStableCoin__NotToZeroAddress();
+
+    constructor() ERC20("DecentralizedStableCoin", "DSC") Ownable(msg.sender) {}
+
+    function burn(uint256 _amount) public override onlyOwner {
+        uint256 balance = balanceOf(msg.sender);
+        if (_amount <= 0) {
+            revert DecentralizedStableCoin__MustBeMoreThanZero();
+        }
+        if (balance < _amount) {
+            revert DecentrlizedStableCoin__BurnAmountExceedsBalance();
+        }
+        super.burn(_amount);
+    }
+
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
+        if (_to == address(0)) {
+            revert DecentralizedStableCoin__NotToZeroAddress();
+        }
+        if (_amount <= 0) {
+            revert DecentralizedStableCoin__MustBeMoreThanZero();
+        }
+        _mint(_to, _amount);
+        return true;
+    }
 }
